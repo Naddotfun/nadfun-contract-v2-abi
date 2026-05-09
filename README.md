@@ -53,6 +53,13 @@ export const NADFUN_V2_TESTNET_AGGREGATOR_METADATA = {
   nadFunRouterAddress: "0x75588668999cA0557b78046b8a5E86b47b9234ec",
   nadFunFactoryAddress: "0x59C51c66B79c68F63d5446940CD13b6968788e36",
   feeCollectorAddress: "0x653cf4297fB3f7804173b8449950E20812DD6dC3",
+  bondingCurveAddress: "0x27063a38eC0D3281D354090EB92e669Ed1eB956C",
+  deploymentBlocks: {
+    bondingCurve: 30418615,
+    nadFunRouter: 30418626,
+    feeCollector: 30418637,
+    nadFunFactory: 30418645,
+  },
   lpFeeBps: 25,
   standardUniswapV2RouterAddress: null,
   standardUniswapV2InitCodeHash: null,

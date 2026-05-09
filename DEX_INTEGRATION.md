@@ -112,6 +112,25 @@ async function getPairFeeInputs(publicClient: PublicClient, pair: `0x${string}`)
 }
 ```
 
+## Fee Config Cache Invalidation
+
+`FeeConfig` field mutability:
+
+| Field | Mutability | Update Event |
+| --- | --- | --- |
+| `baseToken` | immutable after `Setup` | none |
+| `quoteToken` | immutable after `Setup` | none |
+| `creatorFeeRate` | immutable after `Setup` | none |
+| `dexProtocolFeeRate` | mutable | `DexProtocolFeeRateUpdate(pair, oldRate, newRate)` |
+| `curveProtocolFeeRate` | mutable | `CurveProtocolFeeRateUpdate(pair, oldRate, newRate)` (bonding-curve only) |
+
+If you cache `getFeeConfig(pair)` for off-chain DEX quote math:
+
+- Populate the cache on `Setup(baseToken, pair, creatorFeeRate, curveProtocolFeeRate, dexProtocolFeeRate)`.
+- Refresh `dexProtocolFeeRate` on `DexProtocolFeeRateUpdate`.
+- Ignore `CurveProtocolFeeRateUpdate` for DEX caches; it only affects bonding-curve math.
+- `baseToken`, `quoteToken`, and `creatorFeeRate` never change after `Setup`, so a single read is enough.
+
 ## Contract Quote Calls
 
 For the simplest integration, call the pair quote functions. These calls apply the correct pair type and fee logic internally.
