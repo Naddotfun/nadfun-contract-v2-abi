@@ -96,6 +96,17 @@ Sniping penalty lookup uses `block.number - createdAtBlock` as the table index.
 
 The initial buy inside token creation does not apply sniping penalty. Normal buys after creation apply the current sniping penalty, plus creator and protocol fees. Sells do not apply sniping penalty.
 
+### Quote Freshness
+
+Pre-graduation buy quotes are block-sensitive while sniping penalty is active. Within the first 7 blocks after `createdAtBlock`, the buy-side fee can change every block.
+
+Recommended:
+
+- Do not cache pre-graduation buy quotes during the first 7 blocks.
+- Re-read `getAmountOut` / `getAmountIn` immediately before transaction construction.
+- Use short deadlines and tight `amountOutMin` / `amountInMax` bounds.
+- Sells and post-penalty buys are not block-sensitive in the same way.
+
 ## Lifecycle
 
 1. Token creation initializes a curve with virtual reserves from the selected quote config.
@@ -136,6 +147,17 @@ Important fields:
 | `dexType` | DEX type recorded for post-graduation pair |
 | `pair` | NadFunPair address |
 | `graduateFee` | quote amount paid on graduation |
+
+## Graduation Race Conditions
+
+A token can graduate between quote time and execution time. Direct integrations against `BondingCurve` (or against the post-graduation `NadFunPair`) must handle the lifecycle boundary themselves.
+
+- For user-facing trades, prefer `NadFunRouter`. It checks lifecycle internally and routes the quote and execution to the correct venue.
+- For direct integrators, check `getCurve(token).graduated` (or `NadFunRouter.isGraduated(token)`) close to execution time.
+- Treat pre-graduation quotes near the `minTokenReserve` boundary as short-lived; the next buy can graduate the curve.
+- Re-simulate before sending the transaction if the quote is more than a few blocks old.
+
+`BondingCurve.getAmountOut` / `getAmountIn` revert after graduation; `NadFunPair.getAmountOut` / `getAmountIn` revert before graduation. Catch reverts and re-quote on the other venue if needed.
 
 ## Quote Helpers
 
