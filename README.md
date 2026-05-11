@@ -25,6 +25,48 @@ Integration-facing docs and ABI files for NadFun V2.
 NadFun V2 is Uniswap V2-compatible at the pair interface level, but meme-token pairs require custom quote-token fee math. Do not submit or integrate NadFun V2 as a drop-in standard Uniswap V2 fork without the fee rules in [DEX_INTEGRATION.md](DEX_INTEGRATION.md).
 
 ```ts
+export const NADFUN_V2_MAINNET_AGGREGATOR_METADATA = {
+  name: "NadFun V2",
+  chainName: "Monad Mainnet",
+  chainId: 143,
+  nativeToken: {
+    symbol: "MON",
+    decimals: 18,
+  },
+  wrappedNative: {
+    symbol: "WMON",
+    address: "0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A",
+    decimals: 18,
+  },
+  supportedQuoteTokens: [
+    {
+      symbol: "WMON",
+      address: "0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A",
+      decimals: 18,
+    },
+    {
+      symbol: "LVMON",
+      address: "0x91b81bfbe3A747230F0529Aa28d8b2Bc898E6D56",
+      decimals: 18,
+    },
+  ],
+  nadFunRouterAddress: "0x8986C8fD44eb85294A725a7e61AF35E76bA26F91",
+  nadFunFactoryAddress: "0xA25b13127e63ddae6d0b35570FF3D39dBD621001",
+  feeCollectorAddress: "0xE1C8b73343f5A83EBe165BE90470d84B00e33022",
+  bondingCurveAddress: "0x9f3832732923252A21044F21eE6bd87F09514ae4",
+  deploymentBlocks: {
+    bondingCurve: 73857231,
+    nadFunRouter: 73857240,
+    feeCollector: 73857254,
+    nadFunFactory: 73857264,
+  },
+  lpFeeBps: 25,
+  standardUniswapV2RouterAddress: null,
+  standardUniswapV2InitCodeHash: null,
+  webUrl: "coming soon",
+  tokenlistUrl: "coming soon",
+} as const;
+
 export const NADFUN_V2_TESTNET_AGGREGATOR_METADATA = {
   name: "NadFun V2",
   chainName: "Monad Testnet",
@@ -65,7 +107,6 @@ export const NADFUN_V2_TESTNET_AGGREGATOR_METADATA = {
   standardUniswapV2InitCodeHash: null,
   webUrl: "coming soon",
   tokenlistUrl: "coming soon",
-  mainnet: "coming soon",
 } as const;
 ```
 
@@ -73,5 +114,5 @@ export const NADFUN_V2_TESTNET_AGGREGATOR_METADATA = {
 
 | Network | Status |
 | --- | --- |
+| Monad Mainnet | Available |
 | Monad Testnet | Available |
-| Monad Mainnet | Coming soon |

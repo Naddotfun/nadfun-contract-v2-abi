@@ -19,9 +19,16 @@ Use it for:
 | --- | --- | --- |
 | NadFunRouter | `abi/NadFunRouter.json` | create, buy, sell, native quote flows, permits, lifecycle-aware quotes |
 
-## Testnet Addresses
+## Addresses
 
 ```ts
+export const NADFUN_V2_MAINNET_ROUTER = {
+  nadFunRouter: "0x8986C8fD44eb85294A725a7e61AF35E76bA26F91",
+  wmon: "0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A",
+  lvmon: "0x91b81bfbe3A747230F0529Aa28d8b2Bc898E6D56",
+  lvmonMinter: "0x6FbEa6986F38aA85D09a8e9d8E5c71499ef70909",
+} as const;
+
 export const NADFUN_V2_TESTNET_ROUTER = {
   nadFunRouter: "0x75588668999cA0557b78046b8a5E86b47b9234ec",
   wmon: "0x5a4E0bFDeF88C9032CB4d24338C5EB3d3870BfDd",
@@ -30,7 +37,7 @@ export const NADFUN_V2_TESTNET_ROUTER = {
 } as const;
 ```
 
-Mainnet: coming soon.
+Code samples below use `NADFUN_V2_TESTNET_ROUTER` for illustration. Swap in `NADFUN_V2_MAINNET_ROUTER` for production.
 
 ## Router Behavior
 
