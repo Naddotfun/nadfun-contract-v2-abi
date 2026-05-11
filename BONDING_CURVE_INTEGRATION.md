@@ -12,60 +12,107 @@ Use [ROUTER_INTEGRATION.md](ROUTER_INTEGRATION.md) for user-facing create, buy, 
 
 The direct `BondingCurve.buy` and `BondingCurve.sell` functions are low-level balance-delta entrypoints. They do not take user slippage or deadline params. User-facing integrations should call `NadFunRouter`.
 
-## Testnet Addresses
+## Addresses
 
 ```ts
+export const NADFUN_V2_MAINNET_BONDING = {
+  bondingCurve: "0x9f3832732923252A21044F21eE6bd87F09514ae4",
+} as const;
+
 export const NADFUN_V2_TESTNET_BONDING = {
   bondingCurve: "0x27063a38eC0D3281D354090EB92e669Ed1eB956C",
 } as const;
 ```
 
-Mainnet: coming soon.
+Code samples below use `NADFUN_V2_TESTNET_BONDING` for illustration. Swap in `NADFUN_V2_MAINNET_BONDING` for production.
 
 ## Quote Token Configs
 
-The current Monad testnet WMON and LVMon quote configs use the same curve parameters.
+Mainnet and testnet WMON / LVMON quote configs share the same curve parameters. Verified via `ProtocolManager.getConfig(quoteToken)` on each network. Only `settlementThreshold` differs between networks.
 
 ```ts
-export const NADFUN_V2_TESTNET_QUOTE_CONFIGS = {
+export const NADFUN_V2_MAINNET_QUOTE_CONFIGS = {
   wmon: {
-    quoteToken: "0x5a4E0bFDeF88C9032CB4d24338C5EB3d3870BfDd",
+    quoteToken: "0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A",
+    decimals: 18,
     virtualReserve: 70000000000000000000000n,
     virtualTokenReserve: 1060569000000000000000000000n,
     minTokenReserve: 251660440677966101694915255n,
     deployFee: 10000000000000000000n,
     graduateFee: 1000000000000000000000n,
     curveProtocolFeeRate: 100,
+    dexProtocolFeeRate: 35,
+    settlementThreshold: 100000000000000000000n,
+  },
+  lvmon: {
+    quoteToken: "0x91b81bfbe3A747230F0529Aa28d8b2Bc898E6D56",
+    lvmonMinter: "0x6FbEa6986F38aA85D09a8e9d8E5c71499ef70909",
+    decimals: 18,
+    virtualReserve: 70000000000000000000000n,
+    virtualTokenReserve: 1060569000000000000000000000n,
+    minTokenReserve: 251660440677966101694915255n,
+    deployFee: 10000000000000000000n,
+    graduateFee: 1000000000000000000000n,
+    curveProtocolFeeRate: 100,
+    dexProtocolFeeRate: 35,
+    settlementThreshold: 100000000000000000000n,
+  },
+} as const;
+
+export const NADFUN_V2_TESTNET_QUOTE_CONFIGS = {
+  wmon: {
+    quoteToken: "0x5a4E0bFDeF88C9032CB4d24338C5EB3d3870BfDd",
+    decimals: 18,
+    virtualReserve: 70000000000000000000000n,
+    virtualTokenReserve: 1060569000000000000000000000n,
+    minTokenReserve: 251660440677966101694915255n,
+    deployFee: 10000000000000000000n,
+    graduateFee: 1000000000000000000000n,
+    curveProtocolFeeRate: 100,
+    dexProtocolFeeRate: 35,
+    settlementThreshold: 1000000000000000000000n,
   },
   lvmon: {
     quoteToken: "0xBe3fa50514D9617ce645a02B34F595541AF02b6b",
     lvmonMinter: "0xFe5FE61E40433aF41383d8152f96093C236231f7",
+    decimals: 18,
     virtualReserve: 70000000000000000000000n,
     virtualTokenReserve: 1060569000000000000000000000n,
     minTokenReserve: 251660440677966101694915255n,
     deployFee: 10000000000000000000n,
     graduateFee: 1000000000000000000000n,
     curveProtocolFeeRate: 100,
+    dexProtocolFeeRate: 35,
+    settlementThreshold: 1000000000000000000000n,
   },
 } as const;
 ```
 
 Human-readable values, assuming 18 decimals:
 
-| Field | Value |
-| --- | --- |
-| `virtualReserve` | 70,000 quote token |
-| `virtualTokenReserve` | 1,060,569,000 launch token |
-| `minTokenReserve` | 251,660,440.677966101694915255 launch token |
-| `deployFee` | 10 quote token |
-| `graduateFee` | 1,000 quote token |
-| `curveProtocolFeeRate` | 100 bps, 1% |
+| Field | Mainnet | Testnet |
+| --- | --- | --- |
+| `virtualReserve` | 70,000 quote | 70,000 quote |
+| `virtualTokenReserve` | 1,060,569,000 launch | 1,060,569,000 launch |
+| `minTokenReserve` | 251,660,440.677966101694915255 launch | 251,660,440.677966101694915255 launch |
+| `deployFee` | 10 quote | 10 quote |
+| `graduateFee` | 1,000 quote | 1,000 quote |
+| `curveProtocolFeeRate` | 100 bps (1%) | 100 bps (1%) |
+| `dexProtocolFeeRate` | 35 bps (0.35%) | 35 bps (0.35%) |
+| `settlementThreshold` | **100 quote** | **1,000 quote** |
 
-## Current Testnet Fee Config
+## Current Fee Config
 
-NadFun V2 bonding-curve fee rates are basis points, where `10000` means 100%.
+NadFun V2 bonding-curve fee rates are basis points, where `10000` means 100%. Verified via `ProtocolManager` view calls on each network. Mainnet currently restricts `creatorFeeRates` to a single value (`100`); testnet allows three tiers.
 
 ```ts
+export const NADFUN_V2_MAINNET_BONDING_FEES = {
+  defaultCreatorFeeRate: 100,
+  curveProtocolFeeRate: 100,
+  creatorFeeRates: [100],
+  snipingPenaltyTable: [8000, 4000, 2000, 1500, 1000, 1000, 500],
+} as const;
+
 export const NADFUN_V2_TESTNET_BONDING_FEES = {
   defaultCreatorFeeRate: 100,
   curveProtocolFeeRate: 100,
@@ -74,12 +121,14 @@ export const NADFUN_V2_TESTNET_BONDING_FEES = {
 } as const;
 ```
 
-| Config | Current Testnet Value | Meaning |
-| --- | --- | --- |
-| `defaultCreatorFeeRate` | `100` | 1% creator fee used by default integrations |
-| `curveProtocolFeeRate` | `100` | 1% protocol fee on bonding-curve buys and sells |
-| `creatorFeeRates` | `100`, `300`, `500` | values accepted when creating a token |
-| `snipingPenaltyTable` | `8000`, `4000`, `2000`, `1500`, `1000`, `1000`, `500` | extra buy-side fee during the first blocks after creation |
+| Config | Mainnet | Testnet | Meaning |
+| --- | --- | --- | --- |
+| `defaultCreatorFeeRate` | `100` | `100` | 1% creator fee used by default integrations |
+| `curveProtocolFeeRate` | `100` | `100` | 1% protocol fee on bonding-curve buys and sells |
+| `creatorFeeRates` | `[100]` | `[100, 300, 500]` | values accepted when creating a token |
+| `snipingPenaltyTable` | `[8000, 4000, 2000, 1500, 1000, 1000, 500]` | same | extra buy-side fee during the first blocks after creation |
+
+`creatorFeeRates` is governance-controlled via `ProtocolManager.setAllowedCreatorFeeRates`. Use `ProtocolManager.isCreatorFeeRateAllowed(rate)` to validate before submitting a `create` call.
 
 Sniping penalty lookup uses `block.number - createdAtBlock` as the table index.
 
@@ -224,7 +273,7 @@ The initial buy during token creation does not apply the sniping penalty. Normal
 
 Bonding-curve fees are quote-token-denominated.
 
-| Fee | Applies To | Current Testnet Value | Source |
+| Fee | Applies To | Current Value (Mainnet & Testnet) | Source |
 | --- | --- | --- | --- |
 | deploy fee | token creation | 10 quote token | quote config |
 | graduate fee | graduation | 1,000 quote token | quote config |
@@ -300,6 +349,13 @@ publicClient.watchContractEvent({
 Vault allocations are configured at creation time and control how creator fees are distributed.
 
 ```ts
+export const NADFUN_V2_MAINNET_VAULTS = {
+  burnVault: "0x94CFAA4d41AE2336E2a4D8B307c7faf906384C27",
+  lpVault: "0xA1A5ea7c9490A25E715351Ddc66A7771e1817e66",
+  creatorFeeVault: "0x687f9172D5F4798694811333C5C5696afCF4F6f4",
+  giftVault: "0xa46A28558D77B1bF9dd98A451f78c43bE2545605",
+} as const;
+
 export const NADFUN_V2_TESTNET_VAULTS = {
   burnVault: "0xFA707fe7d2c2894bf0436c7B73947cBA9E888017",
   lpVault: "0x2acD9C75fe16c909237D9e6f080210D26c8c956D",

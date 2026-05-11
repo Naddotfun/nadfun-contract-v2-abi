@@ -18,16 +18,19 @@ Integrators must not use standard Uniswap V2 `getAmountOut` / `getAmountIn` form
 | NadFunPair | `abi/NadFunPair.json` | standard V2-style pair reads, swaps, LP reads, and events; plus NadFun quote calls |
 | FeeCollector | `abi/FeeCollector.json` | meme-token pair fee config and quote token |
 
-## Testnet Addresses
+## Addresses
 
 ```ts
+export const NADFUN_V2_MAINNET_DEX = {
+  nadFunFactory: "0xA25b13127e63ddae6d0b35570FF3D39dBD621001",
+  feeCollector: "0xE1C8b73343f5A83EBe165BE90470d84B00e33022",
+} as const;
+
 export const NADFUN_V2_TESTNET_DEX = {
   nadFunFactory: "0x59C51c66B79c68F63d5446940CD13b6968788e36",
   feeCollector: "0x653cf4297fB3f7804173b8449950E20812DD6dC3",
 } as const;
 ```
-
-Mainnet: coming soon.
 
 ## Uniswap V2 Compatibility
 
