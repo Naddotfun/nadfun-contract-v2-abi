@@ -156,6 +156,42 @@ Recommended:
 - Use short deadlines and tight `amountOutMin` / `amountInMax` bounds.
 - Sells and post-penalty buys are not block-sensitive in the same way.
 
+## Reading Live Fees
+
+The constants above are defaults from `ProtocolManager.getConfig(quoteToken)`. Live per-pair rates are stored in `FeeCollector` and can drift from those defaults via governance calls to `setCurveProtocolFeeRate`. `BondingCurve._calculateFees` reads from `FeeCollector.getFeeConfig(curve.pair)`, so off-chain quote replication must read the same source — not the `ProtocolManager` defaults — to match on-chain math.
+
+`pair` comes from `BondingCurve.getCurve(token).pair`. See [DEX_INTEGRATION.md#read-fee-config](DEX_INTEGRATION.md#read-fee-config) for the `getFeeConfig` call shape.
+
+### Field Order
+
+`FeeCollector.getFeeConfig` returns **5 fields in this exact order**:
+
+```text
+(baseToken, quoteToken, creatorFeeRate, curveProtocolFeeRate, dexProtocolFeeRate)
+```
+
+Bonding curve integrators use 4 of them: `baseToken`, `quoteToken`, `creatorFeeRate` (3rd), `curveProtocolFeeRate` (4th). The 5th field (`dexProtocolFeeRate`) is DEX-only — skip it. Clients that decode positionally must read `curveProtocolFeeRate` as the **4th** field, not the 5th; pulling the 5th field as the curve protocol rate silently understates the curve fee by ~65 bps per trade.
+
+Symmetric warning for DEX integrators (who use the 5th field, not the 4th) is in [DEX_INTEGRATION.md#read-fee-config](DEX_INTEGRATION.md#read-fee-config).
+
+### Cache Invalidation
+
+Bonding-curve-relevant `FeeConfig` field mutability:
+
+| Field | Mutability | Update Event |
+| --- | --- | --- |
+| `baseToken` | immutable after `Setup` | none |
+| `quoteToken` | immutable after `Setup` | none |
+| `creatorFeeRate` | immutable after `Setup` | none |
+| `curveProtocolFeeRate` | mutable | `CurveProtocolFeeRateUpdate(pair, oldRate, newRate)` |
+
+If you cache `getFeeConfig(pair)` for off-chain bonding-curve quote math:
+
+- Populate the cache on `FeeCollector.Setup(baseToken, pair, ...)`.
+- Refresh `curveProtocolFeeRate` on `CurveProtocolFeeRateUpdate`.
+- `baseToken`, `quoteToken`, and `creatorFeeRate` never change after `Setup`, so a single read is enough.
+- `DexProtocolFeeRateUpdate` is DEX-only; ignore for bonding caches.
+
 ## Lifecycle
 
 1. Token creation initializes a curve with virtual reserves from the selected quote config.
