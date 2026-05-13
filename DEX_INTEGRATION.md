@@ -70,11 +70,17 @@ For DEX quote math, use:
 feeRate = creatorFeeRate + dexProtocolFeeRate
 ```
 
-Do not include `curveProtocolFeeRate` in DEX quote math.
-
 ## Read Fee Config
 
 Use `FeeCollector.getFeeConfig(pair)` to classify the pair and get quote-token fee inputs.
+
+The struct returns **5 fields in this exact order**:
+
+```text
+(baseToken, quoteToken, creatorFeeRate, curveProtocolFeeRate, dexProtocolFeeRate)
+```
+
+DEX integrators use 4 of them: `baseToken`, `quoteToken`, `creatorFeeRate`, `dexProtocolFeeRate`. The third rate field (`curveProtocolFeeRate`) is bonding-curve-only — skip it. Clients that decode positionally must read `dexProtocolFeeRate` as the **last** (5th) field, not the 4th; pulling the 4th field as the DEX rate silently overstates the swap fee.
 
 ```ts
 import FeeCollectorAbi from "./abi/FeeCollector.json";
@@ -117,7 +123,7 @@ async function getPairFeeInputs(publicClient: PublicClient, pair: `0x${string}`)
 
 ## Fee Config Cache Invalidation
 
-`FeeConfig` field mutability:
+DEX-relevant `FeeConfig` field mutability:
 
 | Field | Mutability | Update Event |
 | --- | --- | --- |
@@ -125,13 +131,11 @@ async function getPairFeeInputs(publicClient: PublicClient, pair: `0x${string}`)
 | `quoteToken` | immutable after `Setup` | none |
 | `creatorFeeRate` | immutable after `Setup` | none |
 | `dexProtocolFeeRate` | mutable | `DexProtocolFeeRateUpdate(pair, oldRate, newRate)` |
-| `curveProtocolFeeRate` | mutable | `CurveProtocolFeeRateUpdate(pair, oldRate, newRate)` (bonding-curve only) |
 
 If you cache `getFeeConfig(pair)` for off-chain DEX quote math:
 
-- Populate the cache on `Setup(baseToken, pair, creatorFeeRate, curveProtocolFeeRate, dexProtocolFeeRate)`.
+- Populate the cache on `FeeCollector.Setup(baseToken, pair, ...)`.
 - Refresh `dexProtocolFeeRate` on `DexProtocolFeeRateUpdate`.
-- Ignore `CurveProtocolFeeRateUpdate` for DEX caches; it only affects bonding-curve math.
 - `baseToken`, `quoteToken`, and `creatorFeeRate` never change after `Setup`, so a single read is enough.
 
 ## Contract Quote Calls
@@ -353,6 +357,14 @@ Exact output:
 ```text
 amountIn = ceil(reserveIn * BPS * amountOut / ((BPS - LP_FEE_RATE) * (reserveOut - amountOut)))
 ```
+
+## Direct Pair Swap
+
+`NadFunPair.swap(amount0Out, amount1Out, to, data)` is push-then-swap, same shape as Uniswap V2. For meme-token pairs there is one semantic to note:
+
+**`amount0Out` / `amount1Out` is the net amount the recipient receives.** For sells where quote is the output token, the pair transfers `amountOut` to the recipient first, then extracts the additional creator + DEX protocol fee (`amountOut * feeRate / (BPS - LP_FEE_RATE - feeRate)`) from its own quote-token balance, then validates the K invariant. Passing the gross amount reverts with `NadFunPair: K`.
+
+`NadFunPair.getAmountOut` and the off-chain `getMemeSellAmountOut` formula in this doc both already return net amounts — use their output directly as `amount0Out` / `amount1Out`, do not gross them up.
 
 ## Events
 
